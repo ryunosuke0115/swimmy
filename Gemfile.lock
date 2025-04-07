@@ -8,7 +8,7 @@ GIT
 
 GIT
   remote: https://github.com/yoshinari-nomura/slack_socket_mode_bot.git
-  revision: bd04ad18c27948146b37c578eb902c8acd818c94
+  revision: 72677059c8b7778efb5c12b07cbb1f7d13382c06
   branch: main
   specs:
     slack_socket_mode_bot (0.9.1)
@@ -110,7 +110,6 @@ GEM
       net-smtp
     memoist (0.16.2)
     mini_mime (1.1.5)
-    mini_portile2 (2.8.8)
     minitest (5.25.5)
     mqtt (0.6.0)
     multi_json (1.15.0)
@@ -127,8 +126,7 @@ GEM
       net-protocol
     news-api (0.2.0)
     nio4r (2.7.4)
-    nokogiri (1.15.7)
-      mini_portile2 (~> 2.8.2)
+    nokogiri (1.15.7-x86_64-linux)
       racc (~> 1.4)
     os (1.1.4)
     ostruct (0.6.1)
@@ -184,7 +182,7 @@ GEM
     websocket-extensions (0.1.5)
 
 PLATFORMS
-  ruby
+  x86_64-linux
 
 DEPENDENCIES
   async-websocket (~> 0.8.0)
@@ -202,4 +200,4 @@ DEPENDENCIES
   websocket (~> 1.2)
 
 BUNDLED WITH
-   2.1.4
+   2.4.22
