@@ -50,7 +50,7 @@ module Swimmy
 
               AddEvents.new(spreadsheet, google_oauth).add_event(calendarName, eventName, startTime, finishTime)
 
-              msg = "#{calendarName}の#{startSplitDate[0]}年#{startSplitDate[1]}月#{startSplitDate[2]}日から#{finishSplitDate[0]}年#{finishSplitDate[1]}月#{finishSplitDate[2]}日にイベント#{eventName}を追加しました"
+              msg = "#{calendarName}の#{startSplitDate[0]}年#{startSplitDate[1]}月#{startSplitDate[2]}日#{startSplitTime[0]}:#{startSplitTime[1]}から#{finishSplitDate[0]}年#{finishSplitDate[1]}月#{finishSplitDate[2]}日#{finishSplitTime[0]}:#{finishSplitTime[1]}にイベント#{eventName}を追加しました"
             end
           end
         else
