@@ -151,7 +151,7 @@ module Swimmy
 
         # レスポンスの処理
         if response.is_a?(Net::HTTPSuccess)
-          return "#{calendarName}の#{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min}から#{finishTime.year}年#{finishTime.month}月#{finishTime.day}日#{finishTime.hour}:#{finishTime.min}にイベント#{eventName}を追加しました"
+          return "#{calendarName}の#{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min.to_s.rjust(2, '0')}から#{finishTime.year}年#{finishTime.month}月#{finishTime.day}日#{finishTime.hour}:#{finishTime.min.to_s.rjust(2, '0')}にイベント#{eventName}を追加しました"
         else
           return "Failed to add event. Error: #{response.body}"
         end
