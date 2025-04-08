@@ -16,8 +16,8 @@ module Swimmy
         client.say(channel: data.channel, text: "予定を追加中...")
 
         google_oauth ||= begin
-          Swimmy::Service::Schedule.new('config/credentials.json', 'config/tokens.json')
-        rescue e
+          Swimmy::Resource::GoogleOAuth.new('config/credentials.json', 'config/tokens.json')
+        rescue => e
           msg = 'Google OAuthの認証に失敗しました．適切な認証情報が設定されているか確認してください．'
           client.say(channel: data.channel, text: msg)
           return
@@ -25,43 +25,77 @@ module Swimmy
 
         if match[:expression]
           arg = match[:expression].split(" ")
-          if arg.length != 4
-            msg = <<~TEXT
-              引数の数が違います
-              "swimmy6 calendar <カレンダー名> <イベント名> <開始時間> <終了時間>" のように入力してください
-              以下は例です
-              "swimmy6 calendar nomlab 第48回開発打ち合わせ 2025-2-26-10:00 2025-2-26-12:00"
-            TEXT
-          else
-            calendarName = arg[0]
-            eventName = arg[1]
-            startSplitDate = arg[2].split("-")
-            finishSplitDate = arg[3].split("-")
-            startSplitTime = startSplitDate[3].split(":")
-            finishSplitTime = finishSplitDate[3].split(":")
-            if startSplitDate.length != 4 || finishSplitDate.length != 4 || startSplitTime.length != 2 || finishSplitTime.length != 2
-              msg = <<~TEXT
-                  時間の入力形式が違います
-                  "2025-2-26-10:00" のように入力してください
-              TEXT
-            else
-              startTime = Time.new(startSplitDate[0], startSplitDate[1], startSplitDate[2], startSplitTime[0], startSplitTime[1], 0)
-              finishTime = Time.new(finishSplitDate[0], finishSplitDate[1], finishSplitDate[2], finishSplitTime[0], finishSplitTime[1], 0)
-
-              AddEvents.new(spreadsheet, google_oauth).add_event(calendarName, eventName, startTime, finishTime)
-
-              msg = "#{calendarName}の#{startSplitDate[0]}年#{startSplitDate[1]}月#{startSplitDate[2]}日#{startSplitTime[0]}:#{startSplitTime[1]}から#{finishSplitDate[0]}年#{finishSplitDate[1]}月#{finishSplitDate[2]}日#{finishSplitTime[0]}:#{finishSplitTime[1]}にイベント#{eventName}を追加しました"
-            end
+          is_valid_arg, eventInfo, msg = Schedule.new.arg_split(arg)
+          if is_valid_arg
+            msg = AddEvents.new(spreadsheet, google_oauth).add_event(eventInfo)
           end
         else
-          msg = <<~TEXT
-          引数が入力されていません
+          msg = "引数が入力されていません"
+        end
+        client.say(text: msg, channel: data.channel)
+      end
+
+      def arg_split(arg)
+        help = <<~TEXT
           "swimmy6 calendar <カレンダー名> <イベント名> <開始時間> <終了時間>" のように入力してください
+          イベント名に空白は使用できません
           以下は例です
           "swimmy6 calendar nomlab 第48回開発打ち合わせ 2025-2-26-10:00 2025-2-26-12:00"
         TEXT
+        if arg.length == 4
+          calendarName = arg[0]
+          eventName = arg[1]
+          startSplitDate = arg[2].split("-")
+          finishSplitDate = arg[3].split("-")
+          startSplitTime = startSplitDate[3].split(":")
+          finishSplitTime = finishSplitDate[3].split(":")
+          if startSplitDate.length == 4 && finishSplitDate.length == 4 && startSplitTime.length == 2 && finishSplitTime.length == 2
+            startTime = Time.new(startSplitDate[0], startSplitDate[1], startSplitDate[2], startSplitTime[0], startSplitTime[1], 0)
+            finishTime = Time.new(finishSplitDate[0], finishSplitDate[1], finishSplitDate[2], finishSplitTime[0], finishSplitTime[1], 0)
+            if is_valid_date(startTime) && is_valid_date(finishTime) && startTime < finishTime
+              eventInfo = {
+                calendarName: calendarName,
+                eventName: eventName,
+                startTime: startTime,
+                finishTime: finishTime
+              }
+              return true, eventInfo, nil
+            else
+              msg = "存在しない時刻，または開始時刻より終了時刻が早い時刻になっています\n"
+              return false, nil, msg
+            end
+          else
+            msg = "時刻の入力形式が違います\n"
+            return false, nil, msg + help
+          end
+        else
+          msg = "引数の長さが違います\n"
+          return false, nil, msg + help
         end
-        client.say(text: msg, channel: data.channel)
+      end
+
+      def is_valid_date(time)
+        year = time.year
+        month = time.month
+        day = time.day
+        mday = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+        if is_leapyear(year)
+          mday[2] = 29
+        end
+        if year < 1 || month < 1 || month > 12 || day < 1 || day > mday[month]
+          return false
+        else
+          return true
+        end
+      end
+
+      def is_leapyear(year)
+        if ((year%4 == 0) && (year%100 != 0)) || year%400 == 0
+          return true
+        else
+          return false
+        end
       end
     end
 
@@ -70,21 +104,24 @@ module Swimmy
       require 'sheetq'
 
       def initialize(spreadsheet, google_oauth)
-        @sheet = spreadsheet.sheet("calendar2", Swimmy::Resource::Schedule)
+        @sheet = spreadsheet.sheet("calendar2", Swimmy::Resource::Calendar)
         @google_oauth = google_oauth
       end
 
-      def add_event(calendar_name, summary, startTime, finishTime)
+      def add_event(eventInfo)
+        calendarName = eventInfo[:calendarName]
+        eventName = eventInfo[:eventName]
+        startTime = eventInfo[:startTime]
+        finishTime = eventInfo[:finishTime]
         calendars = @sheet.fetch
-        calendar_id = nil
+        calendarId = nil
         calendars.each do |calendar|
-          if calendar.name == calendar_name
-            calendar_id = calendar.id
+          if calendar.name == calendarName
+            calendarId = calendar.id
           end
         end
-        puts calendar_id
         event = {
-          summary: summary,
+          summary: eventName,
           start: {
             dateTime: startTime.iso8601,
             timeZone: 'Asia/Tokyo'
@@ -95,7 +132,7 @@ module Swimmy
           }
         }
         # Google Calendar APIのURL
-        uri = URI.parse("https://www.googleapis.com/calendar/v3/calendars/#{calendar_id}/events")
+        uri = URI.parse("https://www.googleapis.com/calendar/v3/calendars/#{calendarId}/events")
 
         # HTTPリクエストの作成
         http = Net::HTTP.new(uri.host, uri.port)
@@ -114,12 +151,9 @@ module Swimmy
 
         # レスポンスの処理
         if response.is_a?(Net::HTTPSuccess)
-          puts "Event added successfully!"
-          # レスポンスボディをJSON形式で解析
-          event_response = JSON.parse(response.body)
-          puts "Event ID: #{event_response['id']}"
+          return "#{calendarName}の#{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min}から#{finishTime.year}年#{finishTime.month}月#{finishTime.day}日#{finishTime.hour}:#{finishTime.min}にイベント#{eventName}を追加しました"
         else
-          puts "Failed to add event. Error: #{response.body}"
+          return "Failed to add event. Error: #{response.body}"
         end
       end
 
