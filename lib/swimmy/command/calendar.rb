@@ -120,6 +120,10 @@ module Swimmy
             calendarId = calendar.id
           end
         end
+        if calendarId.nil?
+          return "#{calendarName}というカレンダーが見つかりませんでした\nカレンダー名が正しいかどうか確認してください\n"
+        end
+
         event = {
           summary: eventName,
           start: {
