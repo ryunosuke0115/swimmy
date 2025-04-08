@@ -50,20 +50,25 @@ module Swimmy
           startSplitTime = startSplitDate[3].split(":")
           finishSplitTime = finishSplitDate[3].split(":")
           if startSplitDate.length == 4 && finishSplitDate.length == 4 && startSplitTime.length == 2 && finishSplitTime.length == 2
-            startTime = Time.new(startSplitDate[0], startSplitDate[1], startSplitDate[2], startSplitTime[0], startSplitTime[1], 0)
-            finishTime = Time.new(finishSplitDate[0], finishSplitDate[1], finishSplitDate[2], finishSplitTime[0], finishSplitTime[1], 0)
-            if is_valid_date(startTime) && is_valid_date(finishTime) && startTime < finishTime
-              eventInfo = {
-                calendarName: calendarName,
-                eventName: eventName,
-                startTime: startTime,
-                finishTime: finishTime
-              }
-              return true, eventInfo, nil
-            else
-              msg = "存在しない時刻，または開始時刻より終了時刻が早い時刻になっています\n"
+            begin
+              startDate = Date.new(startSplitDate[0], startSplitDate[1], startSplitDate[2])
+              finishDate = Date.new(finishSplitDate[0], finishSplitDate[1], finishSplitDate[2])
+              startTime = Time.new(startDate.year, startDate.month, startDate.day, startSplitTime[0], startSplitTime[1], 0)
+              finishTime = Time.new(finishDate.year, finishDate.month, finishDate.day, finishSplitTime[0], finishSplitTime[1], 0)
+            rescue => e
+              msg = <<~TEXT
+                不正な時刻形式，または存在しない日付です
+                開始または終了時刻に誤りがあるか，無効な時刻が含まれています
+              TEXT
               return false, nil, msg
             end
+            eventInfo = {
+              calendarName: calendarName,
+              eventName: eventName,
+              startTime: startTime,
+              finishTime: finishTime
+            }
+            return true, eventInfo, nil
           else
             msg = "時刻の入力形式が違います\n"
             return false, nil, msg + help
@@ -71,30 +76,6 @@ module Swimmy
         else
           msg = "引数の長さが違います\n"
           return false, nil, msg + help
-        end
-      end
-
-      def is_valid_date(time)
-        year = time.year
-        month = time.month
-        day = time.day
-        mday = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-        if is_leapyear(year)
-          mday[2] = 29
-        end
-        if year < 1 || month < 1 || month > 12 || day < 1 || day > mday[month]
-          return false
-        else
-          return true
-        end
-      end
-
-      def is_leapyear(year)
-        if ((year%4 == 0) && (year%100 != 0)) || year%400 == 0
-          return true
-        else
-          return false
         end
       end
     end
