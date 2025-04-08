@@ -94,14 +94,14 @@ module Swimmy
             timeZone: 'Asia/Tokyo'
           }
         }
-        # Google Calendar APIのエンドポイントURL
+        # Google Calendar APIのURL
         uri = URI.parse("https://www.googleapis.com/calendar/v3/calendars/#{calendar_id}/events")
 
         # HTTPリクエストの作成
         http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true  # HTTPS通信を使う
+        http.use_ssl = true  # HTTPS通信
 
-        # POSTリクエストを作成
+        # POSTリクエスト
         request = Net::HTTP::Post.new(uri.path, {
           'Content-Type' => 'application/json',
           'Authorization' => "Bearer #{@google_oauth.token}"  # OAuth2トークン
