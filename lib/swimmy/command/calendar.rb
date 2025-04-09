@@ -68,9 +68,10 @@ module Swimmy
               return false, nil, msg
             end
             begin
-              raise ArgumentError if startTime > finishTime
+              raise ArgumentError if startTime >= finishTime
             rescue => e
               msg = <<~TEXT
+                開始時刻が終了時刻よりも後，または等しくなっています
                 開始時刻は終了時刻よりも前でなければなりません
                 入力された時刻:
                   開始: #{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min.to_s.rjust(2, '0')}
