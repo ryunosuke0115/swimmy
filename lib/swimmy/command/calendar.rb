@@ -54,7 +54,7 @@ module Swimmy
               startYear ,startMonth, startDay = startSplitDate[0..2].map(&:to_i)
               finishYear, finishMonth, finishDay = finishSplitDate[0..2].map(&:to_i)
               [startYear, startMonth, startDay, finishYear, finishMonth, finishDay].each do |i|
-                raise e if i.negative?
+                raise ArgumentError if i.negative?
               end
               startDate = Date.new(startYear, startMonth, startDay)
               finishDate = Date.new(finishYear, finishMonth, finishDay)
@@ -64,6 +64,17 @@ module Swimmy
               msg = <<~TEXT
                 不正な時刻形式，または存在しない日付です
                 開始または終了時刻に誤りがあるか，無効な時刻が含まれています
+              TEXT
+              return false, nil, msg
+            end
+            begin
+              raise ArgumentError if startTime > finishTime
+            rescue => e
+              msg = <<~TEXT
+                開始時刻は終了時刻よりも前でなければなりません
+                入力された時刻:
+                  開始: #{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min.to_s.rjust(2, '0')}
+                  終了: #{finishTime.year}年#{finishTime.month}月#{finishTime.day}日#{finishTime.hour}:#{finishTime.min.to_s.rjust(2, '0')}
               TEXT
               return false, nil, msg
             end
