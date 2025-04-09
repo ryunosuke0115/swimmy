@@ -45,14 +45,19 @@ module Swimmy
         if arg.length == 4
           calendarName = arg[0]
           eventName = arg[1]
-          startSplitDate = arg[2].split("-")
-          finishSplitDate = arg[3].split("-")
+          startSplitDate = arg[2].split("/")
+          finishSplitDate = arg[3].split("/")
           startSplitTime = startSplitDate[3].split(":")
           finishSplitTime = finishSplitDate[3].split(":")
           if startSplitDate.length == 4 && finishSplitDate.length == 4 && startSplitTime.length == 2 && finishSplitTime.length == 2
             begin
-              startDate = Date.new(startSplitDate[0], startSplitDate[1], startSplitDate[2])
-              finishDate = Date.new(finishSplitDate[0], finishSplitDate[1], finishSplitDate[2])
+              startYear ,startMonth, startDay = startSplitDate[0..2].map(&:to_i)
+              finishYear, finishMonth, finishDay = finishSplitDate[0..2].map(&:to_i)
+              [startYear, startMonth, startDay, finishYear, finishMonth, finishDay].each do |i|
+                raise e if i.negative?
+              end
+              startDate = Date.new(startYear, startMonth, startDay)
+              finishDate = Date.new(finishYear, finishMonth, finishDay)
               startTime = Time.new(startDate.year, startDate.month, startDate.day, startSplitTime[0], startSplitTime[1], 0)
               finishTime = Time.new(finishDate.year, finishDate.month, finishDate.day, finishSplitTime[0], finishSplitTime[1], 0)
             rescue => e
