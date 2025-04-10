@@ -72,6 +72,7 @@ module Swimmy
           TEXT
           return false, nil, msg
         end
+
         begin
           raise ArgumentError if startTime >= finishTime
         rescue => e
@@ -84,6 +85,7 @@ module Swimmy
           TEXT
           return false, nil, msg
         end
+
         eventInfo = {
           calendarName: calendarName,
           eventName: eventName,
