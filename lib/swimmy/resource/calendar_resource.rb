@@ -9,7 +9,7 @@ module Swimmy
           "swimmy6 calendar <カレンダー名> <イベント名> <開始時間> <終了時間>" のように入力してください
           イベント名に空白は使用できません
           以下は例です
-          "swimmy6 calendar nomlab 第48回開発打ち合わせ 2025-2-26-10:00 2025-2-26-12:00"
+          "swimmy6 calendar nomlab 第48回開発打ち合わせ 2025/2/26/10:00 2025/2/26/12:00"
         TEXT
         return [false, nil, "引数の長さが違います\n#{help}"] if arg.length != 4
 
@@ -37,7 +37,6 @@ module Swimmy
           msg = <<~TEXT
             不正な時刻形式，または存在しない日付です
             開始または終了時刻に誤りがあるか，無効な時刻が含まれています
-            例: "swimmy6 calendar nomlab 第48回開発打ち合わせ 2025-2-26-10:00 2025-2-26-12:00"
           TEXT
           return false, nil, msg
         end
