@@ -1,11 +1,70 @@
 # coding: utf-8
 
-
+require 'sheetq'
+require 'json'
+require 'uri'
+require 'net/https'
 
 module Swimmy
   module Service
     class Schedule
+      def initialize(spreadsheet, google_oauth)
+        @sheet = spreadsheet.sheet("calendar2", Swimmy::Resource::Calendar)
+        @google_oauth = google_oauth
+      end
 
+      def add_event(eventInfo)
+        calendarName = eventInfo[:calendarName]
+        eventName = eventInfo[:eventName]
+        startTime = eventInfo[:startTime]
+        finishTime = eventInfo[:finishTime]
+        calendars = @sheet.fetch
+        calendarId = nil
+        calendars.each do |calendar|
+          if calendar.name == calendarName
+            calendarId = calendar.id
+          end
+        end
+        if calendarId.nil?
+          return "#{calendarName}というカレンダーが見つかりませんでした\nカレンダー名が正しいかどうか確認してください\n"
+        end
+
+        event = {
+          summary: eventName,
+          start: {
+            dateTime: startTime.iso8601,
+            timeZone: 'Asia/Tokyo'
+          },
+          end: {
+            dateTime: finishTime.iso8601,
+            timeZone: 'Asia/Tokyo'
+          }
+        }
+        # Google Calendar APIのURL
+        uri = URI.parse("https://www.googleapis.com/calendar/v3/calendars/#{calendarId}/events")
+
+        # HTTPリクエストの作成
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true  # HTTPS通信
+
+        # POSTリクエスト
+        request = Net::HTTP::Post.new(uri.path, {
+          'Content-Type' => 'application/json',
+          'Authorization' => "Bearer #{@google_oauth.token}"  # OAuth2トークン
+        })
+        # イベントデータをJSONとしてリクエストボディにセット
+        request.body = event.to_json
+
+        # リクエストを送信してレスポンスを受け取る
+        response = http.request(request)
+
+        # レスポンスの処理
+        if response.is_a?(Net::HTTPSuccess)
+          return "#{calendarName}の#{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min.to_s.rjust(2, '0')}から#{finishTime.year}年#{finishTime.month}月#{finishTime.day}日#{finishTime.hour}:#{finishTime.min.to_s.rjust(2, '0')}にイベント#{eventName}を追加しました"
+        else
+          return "Failed to add event. Error: #{response.body}"
+        end
+      end
     end # class Schedule
   end # module Service
 end # module Swimmy
