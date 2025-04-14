@@ -60,7 +60,19 @@ module Swimmy
 
         # レスポンスの処理
         if response.is_a?(Net::HTTPSuccess)
-          return "#{calendarName}の#{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min.to_s.rjust(2, '0')}から#{finishTime.year}年#{finishTime.month}月#{finishTime.day}日#{finishTime.hour}:#{finishTime.min.to_s.rjust(2, '0')}にイベント#{eventName}を追加しました"
+          eventData = JSON.parse(response.body)
+          createdTime = Time.parse(eventData['created']).getlocal
+
+          msg = <<~TEXT
+            #{calendarName}に以下の予定を追加しました
+
+            イベント名: #{eventName}
+            開始: #{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min.to_s.rjust(2, '0')}
+            終了: #{finishTime.year}年#{finishTime.month}月#{finishTime.day}日#{finishTime.hour}:#{finishTime.min.to_s.rjust(2, '0')}
+            作成日時: #{createdTime.year}年#{createdTime.month}月#{createdTime.day}日#{createdTime.hour}:#{createdTime.min.to_s.rjust(2, '0')}
+          TEXT
+
+          return msg
         else
           return "Failed to add event. Error: #{response.body}"
         end
