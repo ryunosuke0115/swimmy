@@ -40,25 +40,25 @@ module Swimmy
             timeZone: 'Asia/Tokyo'
           }
         }
-        # Google Calendar APIのURL
+        # Google Calendar API　Endpoint URL
         uri = URI.parse("https://www.googleapis.com/calendar/v3/calendars/#{calendarId}/events")
 
-        # HTTPリクエストの作成
+        # make HTTP request
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true  # HTTPS通信
 
-        # POSTリクエスト
+        # POST request
         request = Net::HTTP::Post.new(uri.path, {
           'Content-Type' => 'application/json',
-          'Authorization' => "Bearer #{@google_oauth.token}"  # OAuth2トークン
+          'Authorization' => "Bearer #{@google_oauth.token}"  # OAuth2.0 token
         })
-        # イベントデータをJSONとしてリクエストボディにセット
+        # set event data
         request.body = event.to_json
 
-        # リクエストを送信してレスポンスを受け取る
+        # send request
         response = http.request(request)
 
-        # レスポンスの処理
+        # check response
         if response.is_a?(Net::HTTPSuccess)
           eventData = JSON.parse(response.body)
           createdTime = Time.parse(eventData['created']).getlocal
