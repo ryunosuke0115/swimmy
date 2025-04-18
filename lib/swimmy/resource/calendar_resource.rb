@@ -6,8 +6,8 @@ module Swimmy
     class Schedule
       def arg_split(arg)
         help = <<~TEXT
-          "swimmy6 calendar <カレンダー名> <イベント名> <開始時間> <終了時間>" のように入力してください
-          イベント名に空白は使用できません
+          "swimmy6 calendar <カレンダー名> <予定名> <開始時間> <終了時間>" のように入力してください
+          予定名に空白は使用できません
           以下は例です
           "swimmy6 calendar nomlab 第48回開発打ち合わせ 2025/2/26/10:00 2025/2/26/12:00"
         TEXT
