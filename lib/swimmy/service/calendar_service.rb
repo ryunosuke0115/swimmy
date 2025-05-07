@@ -40,12 +40,12 @@ module Swimmy
             timeZone: 'Asia/Tokyo'
           }
         }
-        # Google Calendar API　Endpoint URL
+        # Google Calendar API Endpoint URL
         uri = URI.parse("https://www.googleapis.com/calendar/v3/calendars/#{calendarId}/events")
 
         # make HTTP request
         http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true  # HTTPS通信
+        http.use_ssl = true  # HTTPS
 
         # POST request
         request = Net::HTTP::Post.new(uri.path, {
