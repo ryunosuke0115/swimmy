@@ -87,7 +87,7 @@ module Swimmy
           予定名に空白は使用できません
           また，時刻のみ・日/時刻・月/日/時刻の入力の際は省略要素が自動で補完されます
           以下は入力例です
-          "swimmy calendar nomlab 第48回開発打ち合わせ 10:00 12:00"
+          "swimmy calendar nomlab 第48回開発打ち合わせ 4/18/10:00 4/18/12:00"
         TEXT
         return [false, nil, "引数の長さが違います\n#{help}"] if arg.length != 4
 
@@ -100,13 +100,13 @@ module Swimmy
         return [false, nil, "開始時刻と終了時刻の入力形式が統一されていません\n#{help}"] if startSplitDate.length != finishSplitDate.length
         dateLength = startSplitDate.length
 
-        return [false, nil, "日付の入力形式が違います\n#{help}"] if dateLength > 4
-
-        startSplitTime = startSplitDate[dateLength - 1].split(":")
-        finishSplitTime = finishSplitDate[dateLength - 1].split(":")
-        return [false, nil, "時刻の入力形式が違います\n#{help}"] if startSplitTime.length != 2 || finishSplitTime.length != 2
-
         begin
+          raise ArgumentError if dateLength > 4
+
+          startSplitTime = startSplitDate[dateLength - 1].split(":")
+          finishSplitTime = finishSplitDate[dateLength - 1].split(":")
+          raise ArgumentError if startSplitTime.length != 2 || finishSplitTime.length != 2
+
           case dateLength
           when 4
             # year/month/day/hour:minute
