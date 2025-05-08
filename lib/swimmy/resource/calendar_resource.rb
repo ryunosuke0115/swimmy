@@ -47,15 +47,34 @@ module Swimmy
           if candidateTime < currentTime
             candidateTime += 1.day
           end
+
         when year.nil? && month.nil? && !day.nil?
           candidateTime = Time.new(currentYear, currentMonth, day, hour, min, 0)
-          if candidateTime < currentTime
-            candidateTime += 1.month
+          if candidateTime < currentTime || !is_valid_date(currentYear, currentMonth, day)
+            searchYear = currentYear
+            searchMonth = currentMonth
+            while 1
+              searchMonth += 1
+              if searchMonth > 12
+                searchYear += 1
+                searchMonth = 1
+              end
+              if is_valid_date(searchYear, searchMonth, day)
+                candidateTime = Time.new(searchYear, searchMonth, day, hour, min, 0)
+                break
+              end
+            end
           end
+
         when year.nil? && !month.nil? && !day.nil?
           candidateTime = Time.new(currentYear, month, day, hour, min, 0)
           if candidateTime < currentTime
-            candidateTime += 1.year
+            searchYear = currentYear
+            searchYear += 1
+            while !is_valid_date(searchYear, month, day)
+              searchYear += 1
+            end
+            candidateTime = Time.new(searchYear, month, day, hour, min, 0)
           end
         end
 
@@ -66,8 +85,9 @@ module Swimmy
         help = <<~TEXT
           "swimmy calendar <カレンダー名> <予定名> <開始時間> <終了時間>" のように入力してください
           予定名に空白は使用できません
-          以下は例です
-          "swimmy6 calendar nomlab 第48回開発打ち合わせ 2025/2/26/10:00 2025/2/26/12:00"
+          また，時刻のみ・日/時刻・月/日/時刻の入力の際は省略要素が自動で補完されます
+          以下は入力例です
+          "swimmy calendar nomlab 第48回開発打ち合わせ 10:00 12:00"
         TEXT
         return [false, nil, "引数の長さが違います\n#{help}"] if arg.length != 4
 
@@ -77,7 +97,7 @@ module Swimmy
         startSplitDate = arg[2].split("/")
         finishSplitDate = arg[3].split("/")
 
-        return [false, nil, "開始時刻と終了時刻の入力形式は統一してください\n#{help}"] if startSplitDate.length != finishSplitDate.length
+        return [false, nil, "開始時刻と終了時刻の入力形式が統一されていません\n#{help}"] if startSplitDate.length != finishSplitDate.length
         dateLength = startSplitDate.length
 
         return [false, nil, "日付の入力形式が違います\n#{help}"] if dateLength > 4
@@ -87,23 +107,23 @@ module Swimmy
         return [false, nil, "時刻の入力形式が違います\n#{help}"] if startSplitTime.length != 2 || finishSplitTime.length != 2
 
         begin
-          case
-          when dateLength == 4
+          case dateLength
+          when 4
             # year/month/day/hour:minute
             raise ArgumentError if !is_valid_date(startSplitDate[0].to_i, startSplitDate[1].to_i, startSplitDate[2].to_i)
             startTime = Time.new(startSplitDate[0].to_i, startSplitDate[1].to_i, startSplitDate[2].to_i, startSplitTime[0], startSplitTime[1], 0)
             finishTime = Time.new(finishSplitDate[0].to_i, finishSplitDate[1].to_i, finishSplitDate[2].to_i, finishSplitTime[0], finishSplitTime[1], 0)
-          when dateLength == 3
+          when 3
             # month/day/hour:minute
             raise ArgumentError if !is_valid_date(nil, startSplitDate[0].to_i, startSplitDate[1].to_i)
             startTime = find_nearest_future_date(nil, startSplitDate[0].to_i, startSplitDate[1].to_i, startSplitTime[0].to_i, startSplitTime[1].to_i, currentTime)
             finishTime = find_nearest_future_date(nil, finishSplitDate[0].to_i, finishSplitDate[1].to_i, finishSplitTime[0].to_i, finishSplitTime[1].to_i, startTime)
-          when dateLength == 2
+          when 2
             # day/hour:minute
             raise ArgumentError if !is_valid_date(nil, nil, startSplitDate[0].to_i)
             startTime = find_nearest_future_date(nil, nil, startSplitDate[0].to_i, startSplitTime[0].to_i, startSplitTime[1].to_i, currentTime)
             finishTime = find_nearest_future_date(nil, nil, finishSplitDate[0].to_i, finishSplitTime[0].to_i, finishSplitTime[1].to_i, startTime)
-          when dateLength == 1
+          when 1
             # hour:minute
             startTime = find_nearest_future_date(nil, nil, nil, startSplitTime[0].to_i, startSplitTime[1].to_i, currentTime)
             finishTime = find_nearest_future_date(nil, nil, nil, finishSplitTime[0].to_i, finishSplitTime[1].to_i, startTime)
@@ -122,9 +142,6 @@ module Swimmy
           msg = <<~TEXT
             開始時刻が終了時刻よりも後，または等しくなっています
             開始時刻は終了時刻よりも前でなければなりません
-            入力された時刻:
-              開始: #{startTime.year}年#{startTime.month}月#{startTime.day}日#{startTime.hour}:#{startTime.min.to_s.rjust(2, '0')}
-              終了: #{finishTime.year}年#{finishTime.month}月#{finishTime.day}日#{finishTime.hour}:#{finishTime.min.to_s.rjust(2, '0')}
           TEXT
           return false, nil, msg
         end
