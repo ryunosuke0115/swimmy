@@ -15,15 +15,12 @@ module Swimmy
           return
         end
 
-        if match[:expression]
-          arg = match[:expression].split(" ")
-          is_valid_arg, eventInfo, msg = Swimmy::Resource::Schedule.new.arg_split(arg)
-          if is_valid_arg
-            msg = Swimmy::Service::Schedule.new(spreadsheet, google_oauth).add_event(eventInfo)
-          end
-        else
-          msg = "引数が入力されていません"
+        arg = match[:expression]&.split(" ")
+        is_valid_arg, eventInfo, msg = Swimmy::Resource::Schedule.new.arg_split(arg)
+        if is_valid_arg
+          msg = Swimmy::Service::Schedule.new(spreadsheet, google_oauth).add_event(eventInfo)
         end
+
         client.say(text: msg, channel: data.channel)
       end
     end # class Schedule
