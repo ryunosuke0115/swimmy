@@ -90,22 +90,22 @@ module Swimmy
           "swimmy calendar nomlab 第48回開発打ち合わせ 4/18/10:00 4/18/12:00"
         TEXT
 
-        begin
-          raise ArgumentError if arg.nil?
-        rescue => e
-          msg = <<~TEXT
-            calendar <カレンダー名> <予定名> <開始時刻> <終了時刻> - 指定されたカレンダーに予定を追加します
-            開始・終了時刻の形式は以下のいずれかであり，統一される必要があります
-            1. 時刻のみ - 例: "10:00"
-            2. 日/時刻 - 例: "18/10:00"
-            3. 月/日/時刻 - 例: "4/18/10:00"
-            4. 年/月/日/時刻 - 例: "2023/4/18/10:00"
-          TEXT
-          return [false, nil, msg]
-        end
+        # begin
+        #   raise ArgumentError if arg.nil?
+        # rescue => e
+        #   msg = <<~TEXT
+        #     calendar <カレンダー名> <予定名> <開始時刻> <終了時刻> - 指定されたカレンダーに予定を追加します
+        #     開始・終了時刻の形式は以下のいずれかであり，統一される必要があります
+        #     1. 時刻のみ - 例: "10:00"
+        #     2. 日/時刻 - 例: "18/10:00"
+        #     3. 月/日/時刻 - 例: "4/18/10:00"
+        #     4. 年/月/日/時刻 - 例: "2023/4/18/10:00"
+        #   TEXT
+        #   return [false, nil, msg]
+        # end
 
         begin
-          raise ArgumentError if arg.length > 4
+          raise ArgumentError if arg.length != 4
         rescue => e
           msg = <<~TEXT
             引数の数が違います
