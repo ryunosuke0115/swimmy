@@ -5,7 +5,7 @@ module Swimmy
   module Resource
     class Schedule
 
-      def leap_year(year)
+      def is_leap_year(year)
         return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
       end
 
@@ -25,7 +25,7 @@ module Swimmy
         # year/month/day
         elsif nilCount == 0
           return false if year < 1 || month < 1 || month > 12 || day < 1
-          if month == 2 && leap_year(year)
+          if month == 2 && is_leap_year(year)
             mday[2] = 29
           end
           return false if day > mday[month]
@@ -82,14 +82,37 @@ module Swimmy
       end
 
       def arg_split(arg)
-        help = <<~TEXT
+        error = <<~TEXT
           "swimmy calendar <カレンダー名> <予定名> <開始時間> <終了時間>" のように入力してください
           予定名に空白は使用できません
           また，時刻のみ・日/時刻・月/日/時刻の入力の際は省略要素が自動で補完されます
           以下は入力例です
           "swimmy calendar nomlab 第48回開発打ち合わせ 4/18/10:00 4/18/12:00"
         TEXT
-        return [false, nil, "引数の長さが違います\n#{help}"] if arg.length != 4
+
+        begin
+          raise ArgumentError if arg.nil?
+        rescue => e
+          msg = <<~TEXT
+            calendar <カレンダー名> <予定名> <開始時間> <終了時間> - 指定されたカレンダーに予定を追加します
+            開始・終了時刻の形式は以下のいずれかであり，統一される必要があります
+            1. 時刻のみ - 例: "10:00"
+            2. 日/時刻 - 例: "18/10:00"
+            3. 月/日/時刻 - 例: "4/18/10:00"
+            4. 年/月/日/時刻 - 例: "2023/4/18/10:00"
+          TEXT
+          return [false, nil, msg]
+        end
+
+        begin
+          raise ArgumentError if arg.length > 4
+        rescue => e
+          msg = <<~TEXT
+            引数の数が違います
+            #{error}
+          TEXT
+          return [false, nil, msg]
+        end
 
         currentTime = Time.now
         calendarName = arg[0]
@@ -97,7 +120,15 @@ module Swimmy
         startSplitDate = arg[2].split("/")
         finishSplitDate = arg[3].split("/")
 
-        return [false, nil, "開始時刻と終了時刻の入力形式が統一されていません\n#{help}"] if startSplitDate.length != finishSplitDate.length
+        begin
+          raise ArgumentError if startSplitDate.length != finishSplitDate.length
+        rescue => e
+          msg = <<~TEXT
+            開始時刻と終了時刻の入力形式が統一されていません
+            #{error}
+          TEXT
+          return [false, nil, msg]
+        end
         dateLength = startSplitDate.length
 
         begin
@@ -106,7 +137,15 @@ module Swimmy
           startSplitTime = startSplitDate[dateLength - 1].split(":")
           finishSplitTime = finishSplitDate[dateLength - 1].split(":")
           raise ArgumentError if startSplitTime.length != 2 || finishSplitTime.length != 2
+        rescue => e
+          msg = <<~TEXT
+            日付，または時刻の形式が不正です
+            #{error}
+          TEXT
+          return [false, nil, msg]
+        end
 
+        begin
           case dateLength
           when 4
             # year/month/day/hour:minute
@@ -133,7 +172,7 @@ module Swimmy
             不正な時刻形式，または存在しない日付です
             開始または終了時刻に誤りがあるか，無効な時刻が含まれています
           TEXT
-          return false, nil, msg
+          return [false, nil, msg]
         end
 
         begin
@@ -143,7 +182,7 @@ module Swimmy
             開始時刻が終了時刻よりも後，または等しくなっています
             開始時刻は終了時刻よりも前でなければなりません
           TEXT
-          return false, nil, msg
+          return [false, nil, msg]
         end
 
         eventInfo = {
@@ -152,7 +191,7 @@ module Swimmy
           startTime: startTime,
           finishTime: finishTime
         }
-        return true, eventInfo, nil
+        return [true, eventInfo, nil]
       end
     end # class Schedule
   end # module Resource
