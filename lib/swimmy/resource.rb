@@ -20,5 +20,6 @@ module Swimmy
     autoload :CoopShop,         "#{dir}/coop_info.rb"
     autoload :NomnichiArticle,  "#{dir}/nomnichi_article.rb"
     autoload :CookResource, "#{dir}/cook_resource.rb"
+    autoload :CalendarEvent, "#{dir}/calendar_resource.rb"
   end
 end
