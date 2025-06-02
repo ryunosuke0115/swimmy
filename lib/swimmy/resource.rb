@@ -21,5 +21,6 @@ module Swimmy
     autoload :NomnichiArticle,  "#{dir}/nomnichi_article.rb"
     autoload :CookResource, "#{dir}/cook_resource.rb"
     autoload :BookmarkEntry, "#{dir}/bookmark.rb"
+    autoload :CalendarEvent, "#{dir}/calendar_resource.rb"
   end
 end
